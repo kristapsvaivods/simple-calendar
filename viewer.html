@@ -20,7 +20,14 @@
   <script>
     // Paste your Firebase config here
     const firebaseConfig = {
-      // ... your config ...
+        apiKey: "BM0gbwUQcc1b4zNvCQHk8DOuFlKleMaJ-BHt6WUp2T-b4quh8WTq43ubXVxrNWRjB588-MCBpmCFYuKjbdW2_xw", // <--- You'll get this from your Firebase project settings
+        authDomain: "simple-calendar-app-a4ec9.firebaseapp.com",
+        databaseURL: "https://simple-calendar-app-a4ec9-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "simple-calendar-app-a4ec9",
+        storageBucket: "simple-calendar-app-a4ec9.appspot.com",
+        messagingSenderId: "357629853886", // <--- You'll get this from your Firebase project settings
+        appId: "simple-calendar-app-a4ec9", // <--- You'll get this from your Firebase project settings
+        // measurementId: "G-XXXXXXXXXX" // Optional: If you've set up Google Analytics
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('events');
