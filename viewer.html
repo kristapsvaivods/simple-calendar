@@ -19,16 +19,27 @@
 
   <script>
     // Paste your Firebase config here
+    import { initializeApp } from "firebase/app";
+    import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
-  apiKey: "AIzaSyB6GgBrMBj0NBByYpz19s7SkrXe0oe_cPc",
-  authDomain: "simple-calendar-app-a4ec9.firebaseapp.com",
-  databaseURL: "https://simple-calendar-app-a4ec9-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "simple-calendar-app-a4ec9",
-  storageBucket: "simple-calendar-app-a4ec9.firebasestorage.app",
-  messagingSenderId: "357629853886",
-  appId: "1:357629853886:web:b401ef561c3cab9fb6deef",
-  measurementId: "G-4VNT87231T"
+      apiKey: "AIzaSyB6GgBrMBj0NBByYpz19s7SkrXe0oe_cPc",
+      authDomain: "simple-calendar-app-a4ec9.firebaseapp.com",
+      databaseURL: "https://simple-calendar-app-a4ec9-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "simple-calendar-app-a4ec9",
+      storageBucket: "simple-calendar-app-a4ec9.firebasestorage.app",
+      messagingSenderId: "357629853886",
+      appId: "1:357629853886:web:b401ef561c3cab9fb6deef",
+      measurementId: "G-4VNT87231T"
     };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('events');
 
