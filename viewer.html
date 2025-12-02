@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viewer - See Events</title>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+  <!-- FullCalendar CDN scripts (global) -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #calendar { max-width: 900px; margin: 40px auto; }
+  </style>
+</head>
+<body>
+  <h1>Viewer: Calendar Events</h1>
+  <div id="calendar"></div>
+
   <script type="module">
     // Paste your Firebase config here (same as in admin.html)
 const firebaseConfig = {
@@ -27,12 +38,10 @@ const firebaseConfig = {
     const db = getDatabase(app);
     const eventsRef = ref(db, 'events');
 
-    // FullCalendar setup
-    import { Calendar } from 'https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js';
-
+    // FullCalendar setup (global access after CDN load)
     document.addEventListener('DOMContentLoaded', function() {
       const calendarEl = document.getElementById('calendar');
-      const calendar = new Calendar(calendarEl, {
+      const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         events: []
       });
@@ -52,13 +61,5 @@ const firebaseConfig = {
       });
     });
   </script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #calendar { max-width: 900px; margin: 40px auto; }
-  </style>
-</head>
-<body>
-  <h1>Viewer: Calendar Events</h1>
-  <div id="calendar"></div>
 </body>
 </html>
