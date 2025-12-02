@@ -5,95 +5,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Add Events</title>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <script type="module">
+    // Paste your Firebase config here
+const firebaseConfig = {
+  apiKey: "AIzaSyB6GgBrMBj0NBByYpz19s7SkrXe0oe_cPc",
+  authDomain: "simple-calendar-app-a4ec9.firebaseapp.com",
+  databaseURL: "https://simple-calendar-app-a4ec9-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "simple-calendar-app-a4ec9",
+  storageBucket: "simple-calendar-app-a4ec9.firebasestorage.app",
+  messagingSenderId: "357629853886",
+  appId: "1:357629853886:web:b401ef561c3cab9fb6deef",
+  measurementId: "G-4VNT87231T"
+};
+
+    // Firebase v9+ modular imports (loaded via CDN)
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
+    import { getDatabase, ref, onValue, set, remove } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js';
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const eventsRef = ref(db, 'events');
+
+    // FullCalendar setup
+    import { Calendar } from 'https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        editable: true,
+        events: [],
+        eventClick: function(info) {
+          if (confirm('Delete this event?')) {
+            remove(ref(db, 'events/' + info.event.id));
+            info.event.remove();
+          }
+        }
+      });
+      calendar.render();
+
+      // Load events from Firebase
+      onValue(eventsRef, (snapshot) => {
+        calendar.removeAllEvents();
+        snapshot.forEach((childSnapshot) => {
+          const childData = childSnapshot.val();
+          const eventId = childSnapshot.key;
+          calendar.addEvent({
+            id: eventId,
+            title: `${childData.name} (${childData.status})`,
+            start: childData.date
+          });
+        });
+      });
+
+      // Add/Update event form
+      document.getElementById('eventForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('eventName').value;
+        const date = document.getElementById('eventDate').value;
+        const status = document.getElementById('eventStatus').value;
+
+        // Use date + name as key to avoid duplicates
+        const key = `${date}-${name.replace(/\s/g, '-')}`;
+        set(ref(db, 'events/' + key), { name, date, status });
+        e.target.reset();
+      });
+    });
+  </script>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     #calendar { max-width: 900px; margin: 40px auto; }
     form { margin-bottom: 20px; }
+    label { display: block; margin: 10px 0; }
+    input, select, button { margin: 5px; padding: 5px; }
   </style>
 </head>
 <body>
   <h1>Admin: Add/Update Events</h1>
   <form id="eventForm">
-    <label>Event Name: <input type="text" id="eventName" required></label><br>
-    <label>Date: <input type="date" id="eventDate" required></label><br>
+    <label>Event Name: <input type="text" id="eventName" required></label>
+    <label>Date: <input type="date" id="eventDate" required></label>
     <label>Status:
       <select id="eventStatus" required>
         <option value="in progress">In Progress</option>
         <option value="ready">Ready</option>
       </select>
-    </label><br>
+    </label>
     <button type="submit">Add/Update Event</button>
   </form>
   <div id="calendar"></div>
-
-  <script>
-    // Paste your Firebase config here
-  import { initializeApp } from "firebase/app";
-  import { getAnalytics } from "firebase/analytics";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-  
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyB6GgBrMBj0NBByYpz19s7SkrXe0oe_cPc",
-    authDomain: "simple-calendar-app-a4ec9.firebaseapp.com",
-    databaseURL: "https://simple-calendar-app-a4ec9-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "simple-calendar-app-a4ec9",
-    storageBucket: "simple-calendar-app-a4ec9.firebasestorage.app",
-    messagingSenderId: "357629853886",
-    appId: "1:357629853886:web:b401ef561c3cab9fb6deef",
-    measurementId: "G-4VNT87231T"
-  };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database().ref('events');
-
-    // Initialize Calendar
-    const calendarEl = document.getElementById('calendar');
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'dayGridMonth',
-      editable: true,
-      events: [], // We'll load from Firebase
-      eventClick: function(info) {
-        if (confirm('Delete this event?')) {
-          db.child(info.event.id).remove();
-          info.event.remove();
-        }
-      }
-    });
-    calendar.render();
-
-    // Load events from Firebase
-    db.on('value', (snapshot) => {
-      calendar.removeAllEvents();
-      snapshot.forEach((child) => {
-        calendar.addEvent({
-          id: child.key,
-          title: `${child.val().name} (${child.val().status})`,
-          start: child.val().date
-        });
-      });
-    });
-
-    // Add/Update event
-    document.getElementById('eventForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('eventName').value;
-      const date = document.getElementById('eventDate').value;
-      const status = document.getElementById('eventStatus').value;
-
-      // Use date + name as key to avoid duplicates, or generate unique ID
-      const key = `${date}-${name.replace(/\s/g, '-')}`;
-      db.child(key).set({ name, date, status });
-      e.target.reset();
-    });
-  </script>
 </body>
 </html>
