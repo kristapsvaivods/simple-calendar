@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viewer - See Events</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #calendar { max-width: 900px; margin: 40px auto; }
+  </style>
+</head>
+<body>
+  <h1>Viewer: Calendar Events</h1>
+  <div id="calendar"></div>
+
+  <script>
+    // Paste your Firebase config here
+    const firebaseConfig = {
+      // ... your config ...
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref('events');
+
+    // Initialize Calendar (read-only)
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      events: []
+    });
+    calendar.render();
+
+    // Load events from Firebase
+    db.on('value', (snapshot) => {
+      calendar.removeAllEvents();
+      snapshot.forEach((child) => {
+        calendar.addEvent({
+          title: `${child.val().name} (${child.val().status})`,
+          start: child.val().date
+        });
+      });
+    });
+  </script>
+</body>
+</html>
