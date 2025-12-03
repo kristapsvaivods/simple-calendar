@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -104,6 +105,48 @@
   </style>
 </head>
 <body>
+
+ <!-- <h1 style="text-align:center;">Shared Calendar – Admin</h1>
+
+  <div class="form-box">
+    <h2>Quick Add / Update</h2>
+    <form id="eventForm">
+      <label>Event Name</label>
+      <input type="text" id="eventName" required>
+
+      <label>Date</label>
+      <input type="date" id="eventDate" required>
+
+      <label>Status</label>
+      <select id="eventStatus" required>
+        <option value="in progress">In Progress</option>
+        <option value="ready">Ready</option>
+      </select>
+
+      <button type="submit">Save Event</button>
+    </form>
+  </div>
+
+  <div id="calendar"></div>
+
+  <!-- Simple modal for editing -->
+ <!-- <div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+    <div style="background:white; margin:10% auto; padding:30px; width:90%; max-width:500px; border-radius:8px;">
+      <h3>Edit Event</h3>
+      <label>Name</label>
+      <input type="text" id="editName"><br><br>
+      <label>Date</label>
+      <input type="date" id="editDate"><br><br>
+      <label>Status</label>
+      <select id="editStatus">
+        <option value="in progress">In Progress</option>
+        <option value="ready">Ready</option>
+      </select><br><br>
+      <button id="saveEdit">Save Changes</button>
+      <button id="deleteEvent" style="background:#d33; margin-left:10px;">Delete</button>
+      <button id="cancelEdit" style="float:right; background:#666;">Cancel</button>
+    </div>
+  </div> -->
 
   <h1>Shared Calendar – Admin</h1>
 
@@ -217,8 +260,136 @@
       });
     });
 
-    // Rest of your form & modal code stays 100% the same
-    // ... (eventForm submit, saveEdit, delete, cancel, etc.)
+  <script type="module"> 
+    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+    //  PUT YOUR FIREBASE CONFIG HERE
+const firebaseConfig = {
+  apiKey: "AIzaSyB6GgBrMBj0NBByYpz19s7SkrXe0oe_cPc",
+  authDomain: "simple-calendar-app-a4ec9.firebaseapp.com",
+  databaseURL: "https://simple-calendar-app-a4ec9-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "simple-calendar-app-a4ec9",
+  storageBucket: "simple-calendar-app-a4ec9.firebasestorage.app",
+  messagingSenderId: "357629853886",
+  appId: "1:357629853886:web:b401ef561c3cab9fb6deef",
+  measurementId: "G-4VNT87231T"
+};
+    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
+    import { getDatabase, ref, onValue, set, remove } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js';
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const eventsRef = ref(db, 'events');
+
+    let calendar;
+    let currentEventId = null; // for edit modal
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        editable: true,
+        selectable: true,
+        height: 'auto',
+
+        // Click on a day → create new event
+        select: function (info) {
+          document.getElementById('eventDate').value = info.startStr;
+          document.getElementById('eventName').focus();
+        },
+
+        // Click on an existing event → open edit modal
+        eventClick: function (info) {
+          currentEventId = info.event.id;
+
+          const data = info.event.extendedProps; // name & status are in extendedProps
+          document.getElementById('editName').value = data.name || info.event.title.split(' (')[0];
+          document.getElementById('editDate').value = info.event.startStr;
+          document.getElementById('editStatus').value = data.status || 'in progress';
+
+          document.getElementById('editModal').style.display = 'block';
+        },
+
+        events: function (fetchInfo, successCallback, failureCallback) {
+          // we load everything with onValue below instead
+          successCallback([]);
+        }
+      });
+
+      calendar.render();
+
+      // Real-time listener
+      onValue(eventsRef, (snapshot) => {
+        calendar.removeAllEvents();
+        snapshot.forEach((child) => {
+          const val = child.val();
+          const id = child.key;
+
+          calendar.addEvent({
+            id: id,
+            title: val.name,
+            start: val.date,
+            backgroundColor: val.status === 'ready' ? '#28a745' : '#f8d7da',
+            borderColor:     val.status === 'ready' ? '#28a745' : '#dc3545',
+            textColor:       val.status === 'ready' ? 'white' : '#721c24',
+            extendedProps: {
+              name: val.name,
+              status: val.status
+            }
+          });
+        });
+      });
+    });
+
+    // Quick form (top of page)
+    document.getElementById('eventForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('eventName').value.trim();
+      const date = document.getElementById('eventDate').value;
+      const status = document.getElementById('eventStatus').value;
+
+      if (!name || !date) return;
+
+      const key = `${date}-${name.replace(/\s+/g, '-')}`;
+      set(ref(db, 'events/' + key), { name, date, status });
+
+      e.target.reset();
+    });
+
+    // Modal buttons
+    document.getElementById('saveEdit').onclick = () => {
+      const newName = document.getElementById('editName').value.trim();
+      const newDate = document.getElementById('editDate').value;
+      const newStatus = document.getElementById('editStatus').value;
+
+      if (!newName || !newDate) return;
+
+      // Create new key with updated values
+      const newKey = `${newDate}-${newName.replace(/\s+/g, '-')}`;
+
+      // Write new entry (overwrites if same key, otherwise creates new)
+      set(ref(db, 'events/' + newKey), { name: newName, date: newDate, status: newStatus });
+
+      // Delete old entry if key changed
+      if (newKey !== currentEventId) {
+        remove(ref(db, 'events/' + currentEventId));
+      }
+
+      document.getElementById('editModal').style.display = 'none';
+    };
+
+    document.getElementById('deleteEvent').onclick = () => {
+      if (confirm('Delete this event permanently?')) {
+        remove(ref(db, 'events/' + currentEventId));
+        document.getElementById('editModal').style.display = 'none';
+      }
+    };
+
+    document.getElementById('cancelEdit').onclick = () => {
+      document.getElementById('editModal').style.display = 'none';
+    };
   </script>
 </body>
 </html>
