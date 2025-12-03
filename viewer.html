@@ -3,75 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Viewer - Calendar Events</title>
-
-  <!-- FullCalendar CSS -->
+  <title>Calendar • Week View</title>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
-
   <style>
-    :root {
-      --primary: #0066cc;
-      --success: #28a745;
-      --danger: #dc3545;
-    }
+    :root { --blue: #007aff; --green: #28a745; --red: #dc3545; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0;
-      padding: 0;
-      background: #f9f9f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f7;
       -webkit-font-smoothing: antialiased;
     }
     h1 {
-      text-align: center;
-      padding: 16px;
       margin: 0;
-      background: var(--primary);
+      padding: 16px;
+      background: var(--blue);
       color: white;
-      font-size: 1.4rem;
+      text-align: center;
+      font-size: 18px;
       font-weight: 600;
     }
     #calendar {
-      margin: 16px;
+      margin: 12px;
       background: white;
-      border-radius: 14px;
+      border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
-    /* FullCalendar mobile tweaks */
-    .fc-header-toolbar {
-      padding: 10px !important;
-    }
-    .fc-button {
-      padding: 10px 14px !important;
-      font-size: 15px !important;
-      border-radius: 10px !important;
-    }
-    .fc-today-button {
-      background: var(--primary) !important;
-      border: none !important;
-    }
-    .fc-toolbar-title {
-      font-size: 1.4rem !important;
+    /* Hide the time column completely */
+    .fc-timegrid-axis { display: none !important; }
+    .fc-timegrid-slot-label { display: none !important; }
+
+    /* Make day headers bigger and cleaner */
+    .fc-col-header-cell {
+      background: #f8f9fa;
       font-weight: 600;
+      font-size: 14px;
+      padding: 12px 4px;
     }
 
-    /* Extra small screens */
-    @media (max-width: 480px) {
-      .fc-toolbar-chunk { display: flex; justify-content: center; }
-      .fc-button-group { gap: 8px; }
+    /* Events: clean blocks, no time shown */
+    .fc-event {
+      border: none !important;
+      border-radius: 8px !important;
+      padding: 6px 8px !important;
+      font-size: 13px !important;
+      font-weight: 500;
+      margin: 3px 4px !important;
+    }
+
+    /* Mobile: make week view super clean */
+    @media (max-width: 768px) {
+      .fc-toolbar { padding: 8px !important; }
+      .fc-toolbar-title { font-size: 17px !important; font-weight: 600; }
+      .fc-button {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+        border-radius: 10px !important;
+      }
+      .fc-today-button { background: var(--blue) !important; border: none !important; }
+      .fc-daygrid-day-frame { min-height: 90px !important; }
+      .fc-day-today { background: #e3f2fd !important; }
     }
   </style>
 </head>
 <body>
 
-  <h1>Calendar Events</h1>
+  <h1>Calendar • This Week</h1>
   <div id="calendar"></div>
 
-  <!-- FullCalendar JS -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
   <script type="module">
-    // Your Firebase config (same as admin)
     const firebaseConfig = {
       apiKey: "AIzaSyB6GgBrMBj0NBByYpz19s7SkrXe0oe_cPc",
       authDomain: "simple-calendar-app-a4ec9.firebaseapp.com",
@@ -79,8 +81,7 @@
       projectId: "simple-calendar-app-a4ec9",
       storageBucket: "simple-calendar-app-a4ec9.firebasestorage.app",
       messagingSenderId: "357629853886",
-      appId: "1:357629853886:web:b401ef561c3cab9fb6deef",
-      measurementId: "G-4VNT87231T"
+      appId: "1:357629853886:web:b401ef561c3cab9fb6deef"
     };
 
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
@@ -91,48 +92,44 @@
     const eventsRef = ref(db, 'events');
 
     document.addEventListener('DOMContentLoaded', () => {
-      const calendarEl = document.getElementById('calendar');
-
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: window.innerWidth <= 768 ? 'timeGridWeek' : 'dayGridMonth', // Week on mobile!
+      const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        initialView: window.innerWidth <= 768 ? 'dayGridWeek' : 'dayGridMonth',
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        buttonText: {
-          today: 'Today',
-          month: 'Month',
-          week: 'Week',
-          day: 'Day'
+          right: window.innerWidth <= 768 ? '' : 'dayGridMonth,dayGridWeek'
         },
         height: 'auto',
-        nowIndicator: true,
-        scrollTime: '08:00:00',
+        firstDay: 1, // Monday start
+        dayHeaderFormat: { weekday: 'short' },
 
-        // Events will be added from Firebase below
-        events: []
+        events: [],
+
+        // This fires when Firebase updates
+        eventDidMount: function(info) {
+          const status = info.event.extendedProps.status;
+          if (status === 'ready') {
+            info.el.style.backgroundColor = '#28a745';
+            info.el.style.color = 'white';
+          } else {
+            info.el.style.backgroundColor = '#f8d7da';
+            info.el.style.color = '#721c24';
+            info.el.style.borderLeft = '4px solid #dc3545';
+          }
+        }
       });
 
       calendar.render();
 
-      // Real-time Firebase listener
       onValue(eventsRef, (snapshot) => {
         calendar.removeAllEvents();
-
-        snapshot.forEach((child) => {
+        snapshot.forEach(child => {
           const val = child.val();
-          const id = child.key;
-
           calendar.addEvent({
-            id: id,
             title: val.name,
             start: val.date,
-            backgroundColor: val.status === 'ready' ? '#28a745' : '#f8d7da',
-            borderColor:    val.status === 'ready' ? '#28a745' : '#dc3545',
-            textColor:      val.status === 'ready' ? 'white'   : '#721c24',
-            // Optional: show status in title too
-            // title: `${val.name} (${val.status})`
+            allDay: true,
+            extendedProps: { status: val.status }
           });
         });
       });
